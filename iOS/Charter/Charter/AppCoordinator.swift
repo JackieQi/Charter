@@ -22,11 +22,11 @@ class AppCoordinator: NSObject {
     }
     
     // Caches
-    private var threadsViewControllerForMailingList = [MailingList: ThreadsViewController]()
+    fileprivate var threadsViewControllerForMailingList = [MailingList: ThreadsViewController]()
 }
 
 extension AppCoordinator: MailingListsViewControllerDelegate {
-    func mailingListsViewControllerDidSelectMailingList(mailingList: MailingListType) {
+    func mailingListsViewControllerDidSelectMailingList(_ mailingList: MailingListType) {
         let viewController: ThreadsViewController
         let list = MailingList(rawValue: mailingList)!
         
@@ -48,7 +48,7 @@ extension AppCoordinator: MailingListsViewControllerDelegate {
 }
 
 extension AppCoordinator: ThreadsViewControllerDelegate {
-    func threadsViewController(threadsViewController: ThreadsViewController, didSelectEmail email: Email) {        
+    func threadsViewController(_ threadsViewController: ThreadsViewController, didSelectEmail email: Email) {        
         let cache = RealmDataSource()
         let network = EmailThreadNetworkDataSourceImpl()
         let service = EmailThreadServiceImpl(cacheDataSource: cache, networkDataSource: network)
@@ -58,7 +58,7 @@ extension AppCoordinator: ThreadsViewControllerDelegate {
         navigationController.pushViewController(viewController, animated: true)
     }
     
-    func threadsViewController(threadsViewController: ThreadsViewController, didSearchWithPhrase phrase: String, inMailingList mailingList: MailingListType) {
+    func threadsViewController(_ threadsViewController: ThreadsViewController, didSearchWithPhrase phrase: String, inMailingList mailingList: MailingListType) {
         let cache = RealmDataSource()
         let network = EmailThreadNetworkDataSourceImpl()
         let service = EmailThreadServiceImpl(cacheDataSource: cache, networkDataSource: network)

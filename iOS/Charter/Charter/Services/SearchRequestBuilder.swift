@@ -13,7 +13,7 @@ class SearchRequestBuilder: NSObject {
     var text: String?
     var mailingList: String?
     
-    private lazy var params: Dictionary<String, String> = {
+    fileprivate lazy var params: Dictionary<String, String> = {
         // /charter/emails?filter={$text: {$search: 'Erica'}}&pagesize=50&sort_by={$meta: "textScore"}
         
         let text = self.text ?? ""
@@ -33,7 +33,7 @@ class SearchRequestBuilder: NSObject {
         return params
     }()
     
-    private lazy var realmQuery: RealmQuery = {
+    fileprivate lazy var realmQuery: RealmQuery = {
         return RealmQuery(predicate: NSPredicate(format: ""), sort: nil, page: 1, pageSize: 0, onlyComplete: true)
     }()
     

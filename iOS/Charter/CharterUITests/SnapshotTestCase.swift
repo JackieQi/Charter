@@ -41,7 +41,7 @@ class SnapshotTestCase: XCTestCase {
         snapshot("01Threads")
         tablesQuery.staticTexts["Optional Binding Shorthand Syntax"].tap()
         snapshot("02Content")
-        tablesQuery.childrenMatchingType(.Cell).elementBoundByIndex(0).staticTexts[quoteDisclosureText].tap()
+        tablesQuery.children(matching: .cell).element(boundBy: 0).staticTexts[quoteDisclosureText].tap()
         snapshot("03Quote")
     }
 }

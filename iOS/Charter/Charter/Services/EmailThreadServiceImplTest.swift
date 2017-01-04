@@ -11,7 +11,7 @@ import XCTest
 
 class EmailThreadServiceImplTest: XCTestCase {
     func testCompletionCalledWhenRetrievingFromCache() {
-        let expectation = expectationWithDescription("should complete with emails")
+        let expectation = self.expectation(description: "should complete with emails")
         
         let cache = MockCacheDataSource()
         let email = Email()
@@ -25,11 +25,11 @@ class EmailThreadServiceImplTest: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func testNetworkAndCaching() {
-        let expectation = expectationWithDescription("should get emails from network and cache them")
+        let expectation = self.expectation(description: "should get emails from network and cache them")
         
         let cache = MockCacheDataSource()
         let email1 = Email()
@@ -37,7 +37,7 @@ class EmailThreadServiceImplTest: XCTestCase {
         cache.emails = [email1]
         
         let network = MockNetworkDataSource()
-        let email2 = NetworkEmail(id: "two", from: "from", mailingList: "ml", content: "con", archiveURL: "ar", date: NSDate(), subject: "sub", inReplyTo: nil, references: [], descendants: [])
+        let email2 = NetworkEmail(id: "two", from: "from", mailingList: "ml", content: "con", archiveURL: "ar", date: Date(), subject: "sub", inReplyTo: nil, references: [], descendants: [])
         network.emails = [email2]
         
         let service = EmailThreadServiceImpl(cacheDataSource: cache, networkDataSource: network)
@@ -54,11 +54,11 @@ class EmailThreadServiceImplTest: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func testGetUncachedThreads() {
-        let expectation = expectationWithDescription("should get uncached threads")
+        let expectation = self.expectation(description: "should get uncached threads")
         
         let cache = MockCacheDataSource()
         let email1 = Email()
@@ -75,7 +75,7 @@ class EmailThreadServiceImplTest: XCTestCase {
             cache.emails = [email1, email2, email3]
         }
         
-        func networkEmailWithId(id: String) -> NetworkEmail {
+        func networkEmailWithId(_ id: String) -> NetworkEmail {
             return NetworkEmail(id: id, from: "", mailingList: "", content: "", archiveURL: nil, date: NSDate(), subject: "", inReplyTo: nil, references: [], descendants: [])
         }
         
@@ -98,6 +98,6 @@ class EmailThreadServiceImplTest: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
 }

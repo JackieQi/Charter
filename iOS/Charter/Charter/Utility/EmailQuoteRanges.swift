@@ -8,14 +8,14 @@
 
 import UIKit
 
-func EmailQuoteRanges(email: String) -> [NSRange] {
-    var lines = email.componentsSeparatedByCharactersInSet(NSCharacterSet.newlineCharacterSet()).map { $0 + "\n" }
+func EmailQuoteRanges(_ email: String) -> [NSRange] {
+    var lines = email.components(separatedBy: CharacterSet.newlines).map { $0 + "\n" }
     
     // the `.map { $0 + "\n" }` may have incorrectly added a newline. Remove it if it wasn't present
     if let lastCharacter = email.characters.last {
         if lastCharacter != "\n" {
             let lastLine = lines[lines.count - 1]
-            let withoutNewline = (lastLine as NSString).stringByReplacingOccurrencesOfString("\n", withString: "")
+            let withoutNewline = (lastLine as NSString).replacingOccurrences(of: "\n", with: "")
             lines[lines.count - 1] = withoutNewline
         }
     }

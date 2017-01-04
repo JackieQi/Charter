@@ -11,16 +11,16 @@ import UIKit
 class ThreadDetailViewController: UIViewController, UITableViewDelegate, FullEmailMessageTableViewCellDelegate, UIPopoverPresentationControllerDelegate {
     @IBOutlet weak var tableView: UITableView!
     
-    private let dataSource: ThreadDetailDataSource
+    fileprivate let dataSource: ThreadDetailDataSource
     
-    private var navigationBar: UINavigationBar? { return navigationController?.navigationBar }
+    fileprivate var navigationBar: UINavigationBar? { return navigationController?.navigationBar }
     
-    private lazy var nextMessageButton: UIBarButtonItem = { UIBarButtonItem(image: UIImage(named: "UIButtonBarArrowDown"), style: .Plain, target: self, action: #selector(self.scrollToNextMessage)) }()
-    private lazy var previousMessageButton: UIBarButtonItem = { UIBarButtonItem(image: UIImage(named: "UIButtonBarArrowUp"), style: .Plain, target: self, action: #selector(self.scrollToPreviousMessage)) }()
+    fileprivate lazy var nextMessageButton: UIBarButtonItem = { UIBarButtonItem(image: UIImage(named: "UIButtonBarArrowDown"), style: .plain, target: self, action: #selector(self.scrollToNextMessage)) }()
+    fileprivate lazy var previousMessageButton: UIBarButtonItem = { UIBarButtonItem(image: UIImage(named: "UIButtonBarArrowUp"), style: .plain, target: self, action: #selector(self.scrollToPreviousMessage)) }()
     
     init(dataSource: ThreadDetailDataSource) {
         self.dataSource = dataSource
-        super.init(nibName: "ThreadDetailViewController", bundle: NSBundle.mainBundle())
+        super.init(nibName: "ThreadDetailViewController", bundle: Bundle.main)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -34,7 +34,7 @@ class ThreadDetailViewController: UIViewController, UITableViewDelegate, FullEma
         tableView.delegate = self
         tableView.estimatedRowHeight = 160
         tableView.rowHeight = UITableViewAutomaticDimension
-        tableView.separatorStyle = .None
+        tableView.separatorStyle = .none
         tableView.allowsSelection = false
         
         setupNavigationButtons()
@@ -48,37 +48,37 @@ class ThreadDetailViewController: UIViewController, UITableViewDelegate, FullEma
     func updateNavigationButtons() {
         guard let navigationBar = navigationBar else { return }
         
-        previousMessageButton.enabled = tableView.contentOffset.y > 0
+        previousMessageButton.isEnabled = tableView.contentOffset.y > 0
         
-        let lastRowIndexPath = NSIndexPath(forRow: lastRowIndex, inSection: 0)
+        let lastRowIndexPath = IndexPath(row: lastRowIndex, section: 0)
         let navBarOffset = navigationBar.frame.size.height + navigationBar.frame.origin.y
-        nextMessageButton.enabled = tableView.contentOffset.y < tableView.rectForRowAtIndexPath(lastRowIndexPath).origin.y - navBarOffset - 1
+        nextMessageButton.isEnabled = tableView.contentOffset.y < tableView.rectForRow(at: lastRowIndexPath).origin.y - navBarOffset - 1
     }
     
-    func scrollViewDidScroll(scrollView: UIScrollView) {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateNavigationButtons()
     }
     
-    func tableView(tableView: UITableView, indentationLevelForRowAtIndexPath indexPath: NSIndexPath) -> Int {
+    func tableView(_ tableView: UITableView, indentationLevelForRowAt indexPath: IndexPath) -> Int {
         return dataSource.tableView(tableView, indentationLevelForRowAtIndexPath: indexPath) ?? 0
     }
     
-    func didChangeCellHeight(indexPath: NSIndexPath) {
+    func didChangeCellHeight(_ indexPath: IndexPath) {
         tableView.reloadData()
     }
     
-    func adaptivePresentationStyleForPresentationController(controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
-        return .None
+    func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+        return .none
     }
     
-    func adaptivePresentationStyleForPresentationController(controller: UIPresentationController) -> UIModalPresentationStyle {
-        return .None
+    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
+        return .none
     }
     
-    func presentPopover(view: UIView, sender: UIView) {
+    func presentPopover(_ view: UIView, sender: UIView) {
         let size: CGSize
         
-        if UIDevice.currentDevice().orientation == .LandscapeLeft || UIDevice.currentDevice().orientation == .LandscapeRight {
+        if UIDevice.current.orientation == .landscapeLeft || UIDevice.current.orientation == .landscapeRight {
             size = CGSize(width: self.view.frame.width - 140, height: self.view.frame.height - 10)
         } else {
             size = CGSize(width: self.view.frame.width - 10, height: self.view.frame.height - 140)
@@ -86,31 +86,31 @@ class ThreadDetailViewController: UIViewController, UITableViewDelegate, FullEma
         
         let viewController = UIViewController()
         viewController.preferredContentSize = size
-        viewController.view.backgroundColor = .whiteColor()
-        viewController.modalPresentationStyle = UIModalPresentationStyle.Popover
+        viewController.view.backgroundColor = .white
+        viewController.modalPresentationStyle = UIModalPresentationStyle.popover
         
         viewController.popoverPresentationController!.delegate = self
         viewController.popoverPresentationController!.sourceView = sender
         viewController.popoverPresentationController!.sourceRect = sender.frame
         viewController.popoverPresentationController!.permittedArrowDirections = UIPopoverArrowDirection.init(rawValue: 0) // No arrow
         
-        view.frame = CGRect(origin: CGPointZero, size: CGSize(width: size.width - 10, height: size.height - 10))
+        view.frame = CGRect(origin: CGPoint.zero, size: CGSize(width: size.width - 10, height: size.height - 10))
         viewController.view.addSubview(view)
         
-        self.presentViewController(viewController, animated: true, completion: nil)
+        self.present(viewController, animated: true, completion: nil)
     }
 }
 
 // Logic for navigation buttons (previous/next arrows)
 extension ThreadDetailViewController {
-    private var firstVisibleRowIndex: Int? {
+    fileprivate var firstVisibleRowIndex: Int? {
         guard let navigationBar = navigationBar else { return nil }
-        let convertedNavBarFrame = tableView.convertRect(navigationBar.bounds, fromView: navigationBar)
+        let convertedNavBarFrame = tableView.convert(navigationBar.bounds, from: navigationBar)
         let samplingY = convertedNavBarFrame.origin.y + convertedNavBarFrame.size.height + 1
-        return tableView.indexPathForRowAtPoint(CGPoint(x: 0, y: samplingY))?.row
+        return tableView.indexPathForRow(at: CGPoint(x: 0, y: samplingY))?.row
     }
     
-    private var lastRowIndex: Int {
+    fileprivate var lastRowIndex: Int {
         return dataSource.tableView(tableView, numberOfRowsInSection: 0) - 1
     }
     
@@ -124,12 +124,12 @@ extension ThreadDetailViewController {
         scrollToRowAtIndex(requestedIndex: currentIndex + 1)
     }
     
-    private func scrollToRowAtIndex(requestedIndex index: Int) {
-        let indexPath = NSIndexPath(forRow: clamp(index, min: 0, max: lastRowIndex), inSection: 0)
-        tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Top, animated: true)
+    fileprivate func scrollToRowAtIndex(requestedIndex index: Int) {
+        let indexPath = IndexPath(row: clamp(index, min: 0, max: lastRowIndex), section: 0)
+        tableView.scrollToRow(at: indexPath, at: .top, animated: true)
     }
     
-    private func clamp<T : Comparable>(value: T, min: T, max: T) -> T {
+    fileprivate func clamp<T : Comparable>(_ value: T, min: T, max: T) -> T {
         if (value < min) { return min }
         if (value > max) { return max }
         return value

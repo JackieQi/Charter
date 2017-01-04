@@ -16,7 +16,7 @@ final class Email: Object {
     dynamic var mailingList: String = ""
     dynamic var content: String = ""
     dynamic var archiveURL: String?
-    dynamic var date: NSDate = NSDate(timeIntervalSince1970: 1)
+    dynamic var date: Date = Date(timeIntervalSince1970: 1)
     dynamic var subject: String = ""
     dynamic var inReplyTo: Email?
     let references: List<Email> = List<Email>()
@@ -37,36 +37,31 @@ final class Email: Object {
     }
 }
 
-enum EmailError: ErrorType {
-    case InvalidDate
-    case MissingFields
-    case InvalidData
+enum EmailError: Swift.Error {
+    case invalidDate
+    case missingFields
+    case invalidData
 }
 
 func ==(lhs: Email, rhs: Email) -> Bool {
     return lhs.id == rhs.id
 }
 
-// For whatever reason in my Xcode 7.3 we need this conformance to compile. This is redundant so I expect this will change soon.
-extension Email: Hashable {
-    override var hashValue: Int { return id.hashValue }
-}
-
 extension Email {
     /// Construct an email from JSON data from `data`.
-    class func createFromData(data: NSData, inRealm realm: Realm) throws -> Email {
-        guard let dictionary = try NSJSONSerialization.JSONObjectWithData(data, options: []) as? NSDictionary else { throw EmailError.InvalidData }
+    class func createFromData(_ data: Data, inRealm realm: Realm) throws -> Email {
+        guard let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary else { throw EmailError.invalidData }
         
         let networkEmail = try NetworkEmail(fromDictionary: dictionary)
         
         return try Email.createFromNetworkEmail(networkEmail, inRealm: realm)
     }
     
-    class func createFromNetworkEmail(networkEmail: NetworkEmail, inRealm realm: Realm) throws -> Email {
+    class func createFromNetworkEmail(_ networkEmail: NetworkEmail, inRealm realm: Realm) throws -> Email {
         let email = Email()
         email.id = networkEmail.id
         email.from = networkEmail.from
-        email.date = networkEmail.date
+        email.date = networkEmail.date as Date
         email.subject = networkEmail.subject
         email.mailingList = networkEmail.mailingList
         email.content = networkEmail.content
@@ -74,11 +69,11 @@ extension Email {
         
         func emailsToCreate(fromListOfIds ids: [String], inRealm realm: Realm) -> [Email] {
             let predicate = NSPredicate(format: "id IN %@", ids)
-            let emailsInDatabase = Set<Email>(realm.objects(Email)
+            let emailsInDatabase = Set<Email>(realm.objects(Email.self)
                 .filter(predicate))
                 .map { $0.id } + [networkEmail.id] // In case of self-references
             
-            let emailsNotInDatabase = Set<String>(ids).subtract(emailsInDatabase)
+            let emailsNotInDatabase = Set<String>(ids).subtracting(emailsInDatabase)
             
             let emailsToCreate: Array<Email> = (emailsNotInDatabase).map { id in
                 let email = Email()
@@ -113,22 +108,23 @@ extension Email {
         inReplyToToCreate.forEach { emailPool[$0.id] = $0 }
         
         // If any of the reference-type emails (i.e. incomplete emails) are trying to save over the top of the networkEmail, remove them from the pool.
-        emailPool.removeValueForKey(email.id)
+        emailPool.removeValue(forKey: email.id)
         
         try realm.write {
             realm.add(email, update: true)
             realm.add(emailPool.values)
             
-            func addEmailsWithIds(ids: [String], toList list: List<Email>) {
-                let toAdd = realm.objects(Email).filter("id in %@", ids)
-                list.appendContentsOf(toAdd)
+            func addEmailsWithIds(_ ids: [String], toList list: List<Email>) {
+              
+                let toAdd = realm.objects(Email.self).filter("id in %@", ids).map { $0 }
+                list.append(objectsIn: toAdd)
             }
             
             addEmailsWithIds(descendantIDs, toList: email.descendants)
             addEmailsWithIds(referenceIDs, toList: email.references)
             
             if let inReplyTo = inReplyTo {
-                email.inReplyTo = realm.objects(Email).filter("id == %@", inReplyTo).first
+                email.inReplyTo = realm.objects(Email.self).filter("id == %@", inReplyTo).first
             }
         }
 

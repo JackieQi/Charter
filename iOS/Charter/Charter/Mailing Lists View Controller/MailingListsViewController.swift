@@ -9,7 +9,7 @@
 import UIKit
 
 protocol MailingListsViewControllerDelegate: class {
-    func mailingListsViewControllerDidSelectMailingList(mailingList: MailingListType)
+    func mailingListsViewControllerDidSelectMailingList(_ mailingList: MailingListType)
 }
 
 class MailingListsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -23,11 +23,11 @@ class MailingListsViewController: UIViewController, UITableViewDataSource, UITab
     
     init(mailingLists: [MailingListType]) {
         self.mailingLists = mailingLists
-        super.init(nibName: "MailingListsViewController", bundle: NSBundle.mainBundle())
+        super.init(nibName: "MailingListsViewController", bundle: Bundle.main)
     }
     
     override func viewDidLoad() {
-        tableView.registerClass(UITableViewCell.self, forCellReuseIdentifier: MailingListsViewController.reuseIdentifier)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: MailingListsViewController.reuseIdentifier)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.tableFooterView = UIView(frame: .zero)
@@ -39,32 +39,32 @@ class MailingListsViewController: UIViewController, UITableViewDataSource, UITab
         fatalError("init(coder:) has not been implemented")
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(MailingListsViewController.reuseIdentifier)!
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: MailingListsViewController.reuseIdentifier)!
         cell.textLabel?.text = self.mailingLists[indexPath.row].name
-        cell.accessoryType = .DisclosureIndicator
+        cell.accessoryType = .disclosureIndicator
         cell.accessibilityIdentifier = self.mailingLists[indexPath.row].identifier
         return cell
     }
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return mailingLists.count
     }
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        tableView.selectRowAtIndexPath(nil, animated: false, scrollPosition: UITableViewScrollPosition.Middle)
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.selectRow(at: nil, animated: false, scrollPosition: UITableViewScrollPosition.middle)
         delegate?.mailingListsViewControllerDidSelectMailingList(mailingLists[indexPath.row])
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         if let selected = tableView.indexPathForSelectedRow {
-            tableView.deselectRowAtIndexPath(selected, animated: true)
+            tableView.deselectRow(at: selected, animated: true)
         }
     }
 }

@@ -16,21 +16,21 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
                 let textLabels = emailFormatter.labelsInSubject(emailFormatter.formatSubject(email.subject))
                 
                 let match: Match
-                if email.subject.lowercaseString.containsString(searchPhrase.lowercaseString) {
-                    match = .Subject(searchPhrase)
-                } else if email.from.lowercaseString.containsString(searchPhrase.lowercaseString) {
-                    match = .From(searchPhrase)
+                if email.subject.lowercased().contains(searchPhrase.lowercased()) {
+                    match = .subject(searchPhrase)
+                } else if email.from.lowercased().contains(searchPhrase.lowercased()) {
+                    match = .from(searchPhrase)
                 } else {
-                    match = .Content(searchPhrase) // Assume that if we have the email it must match on one of these three fields.
+                    match = .content(searchPhrase) // Assume that if we have the email it must match on one of these three fields.
                 }
                 
                 var labels: [(string: String, textColor: UIColor, backgroundColor: UIColor)] = [
-                    (string: match.label().0, textColor: UIColor.whiteColor(), backgroundColor: match.label().1)
+                    (string: match.label().0, textColor: UIColor.white, backgroundColor: match.label().1)
                 ]
                 
                 labels
-                    .appendContentsOf(
-                        textLabels.map { (labelService.formattedStringForLabel($0), labelService.colorForLabel($0), UIColor.whiteColor()) }
+                    .append(
+                        contentsOf: textLabels.map { (labelService.formattedStringForLabel($0), labelService.colorForLabel($0), UIColor.white) }
                 )
                 
                 self.labels[email] = labels
@@ -48,8 +48,8 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
     
     let emailFormatter = EmailFormatter()
     
-    private let cellReuseIdentifier = "messageCell"
-    private let emptyCellReuseIdentifier = "searchInProgressCell"
+    fileprivate let cellReuseIdentifier = "messageCell"
+    fileprivate let emptyCellReuseIdentifier = "searchInProgressCell"
     
     var isEmpty: Bool {
         return emails.count == 0
@@ -73,7 +73,7 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
         super.init()
     }
     
-    func refreshDataFromNetwork(completion: (Bool) -> Void) {
+    func refreshDataFromNetwork(_ completion: @escaping (Bool) -> Void) {
         isSearching = true
         service.getUncachedThreads(self.request) { emails in
             self.isSearching = false
@@ -83,22 +83,22 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
         }
     }
     
-    func emailAtIndexPath(indexPath: NSIndexPath) -> Email {
+    func emailAtIndexPath(_ indexPath: IndexPath) -> Email {
         return emails[indexPath.row]
     }
     
-    func registerTableView(tableView: UITableView) {
-        tableView.registerNib(MessagePreviewTableViewCell.nib(), forCellReuseIdentifier: cellReuseIdentifier)
-        tableView.registerNib(SearchInProgressTableViewCell.nib(), forCellReuseIdentifier: emptyCellReuseIdentifier)
+    func registerTableView(_ tableView: UITableView) {
+        tableView.register(MessagePreviewTableViewCell.nib(), forCellReuseIdentifier: cellReuseIdentifier)
+        tableView.register(SearchInProgressTableViewCell.nib(), forCellReuseIdentifier: emptyCellReuseIdentifier)
         
         refreshDataFromNetwork { success in
             tableView.reloadData()
         }
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard !isEmpty else {
-            tableView.backgroundColor = UIColor.whiteColor()
+            tableView.backgroundColor = UIColor.white
             return 1
         }
         
@@ -106,23 +106,23 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
         return emails.count
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard !isEmpty else {
-            let cell = tableView.dequeueReusableCellWithIdentifier(emptyCellReuseIdentifier) as! SearchInProgressTableViewCell
+            let cell = tableView.dequeueReusableCell(withIdentifier: emptyCellReuseIdentifier) as! SearchInProgressTableViewCell
             if isSearching {
                 cell.activityIndicator.startAnimating()
                 cell.searchLabel.text = Localizable.Strings.searching
-                cell.activityIndicator.hidden = false
+                cell.activityIndicator.isHidden = false
             } else {
                 cell.activityIndicator.stopAnimating()
-                cell.activityIndicator.hidden = true
+                cell.activityIndicator.isHidden = true
                 cell.searchLabel.text = Localizable.Strings.noResults
             }
             
             return cell
         }
         
-        let cell = tableView.dequeueReusableCellWithIdentifier(cellReuseIdentifier) as! MessagePreviewTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellReuseIdentifier) as! MessagePreviewTableViewCell
         let email = emailAtIndexPath(indexPath)
         let formattedSubject = emailFormatter.subjectByRemovingLabels(
                 emailFormatter.formatSubject(email.subject)
@@ -141,23 +141,23 @@ class ThreadsSearchViewControllerDataSource: NSObject, ThreadsViewControllerData
 }
 
 private enum Match {
-    case Subject(String)
-    case From(String)
-    case Content(String)
+    case subject(String)
+    case from(String)
+    case content(String)
     
     func label() -> (String, UIColor) {
         let text: String
         let color: UIColor = UIColor(red:0.99, green:0.43, blue:0.22, alpha:1)
         
         switch self {
-        case .Subject(_):
+        case .subject(_):
             text = Localizable.Strings.subject
-        case .From(_):
+        case .from(_):
             text = Localizable.Strings.author
-        case .Content(_):
+        case .content(_):
             text = Localizable.Strings.content
         }
         
-        return (text.lowercaseString, color)
+        return (text.lowercased(), color)
     }
 }

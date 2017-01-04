@@ -14,17 +14,17 @@ struct NetworkEmail {
     let mailingList: String
     let content: String
     let archiveURL: String?
-    let date: NSDate
+    let date: Date
     let subject: String
     let inReplyTo: String?
     let references: [String]
     let descendants: [String]
 }
 
-enum NetworkEmailError: ErrorType {
-    case MissingRequiredField
-    case InvalidDate
-    case InvalidJSON
+enum NetworkEmailError: Error {
+    case missingRequiredField
+    case invalidDate
+    case invalidJSON
 }
 
 extension NetworkEmail {
@@ -33,12 +33,12 @@ extension NetworkEmail {
         
         guard let
             id = d["_id"] as? String,
-            from = d["from"] as? String,
-            mailingList = d["mailingList"] as? String,
-            content = d["content"] as? String,
-            subject = d["subject"] as? String
+            let from = d["from"] as? String,
+            let mailingList = d["mailingList"] as? String,
+            let content = d["content"] as? String,
+            let subject = d["subject"] as? String
             else {
-                throw NetworkEmailError.MissingRequiredField
+                throw NetworkEmailError.missingRequiredField
         }
         
         let references = ((d["references"] as? [String]) ?? []).filter { !$0.isEmpty }
@@ -46,20 +46,20 @@ extension NetworkEmail {
         let inReplyTo = d["inReplyTo"] as? String
         let archiveURL = d["archiveURL"] as? String
         
-        guard let dateDict = d["date"] as? NSDictionary, interval = dateDict["$date"] as? Double else {
-            throw NetworkEmailError.InvalidDate
+        guard let dateDict = d["date"] as? NSDictionary, let interval = dateDict["$date"] as? Double else {
+            throw NetworkEmailError.invalidDate
         }
-        let date = NSDate(timeIntervalSince1970: interval / 1000)
+        let date = Date(timeIntervalSince1970: interval / 1000)
         
         self.init(id: id, from: from, mailingList: mailingList, content: content, archiveURL: archiveURL, date: date, subject: subject, inReplyTo: inReplyTo, references: references, descendants: descendants)
     }
     
-    static func listFromJSONData(data: NSData) throws -> [NetworkEmail] {
-        let json = try NSJSONSerialization.JSONObjectWithData(data, options: [])
+    static func listFromJSONData(_ data: Data) throws -> [NetworkEmail] {
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
         
         guard let dictionary = json as? NSDictionary,
-            embedded = dictionary["_embedded"] as? NSDictionary,
-            docs = embedded["rh:doc"] as? Array<NSDictionary> else { throw NetworkEmailError.InvalidJSON }
+            let embedded = dictionary["_embedded"] as? NSDictionary,
+            let docs = embedded["rh:doc"] as? Array<NSDictionary> else { throw NetworkEmailError.invalidJSON }
         
         return docs.map { try? NetworkEmail(fromDictionary: $0) }.flatMap { $0 }
     }

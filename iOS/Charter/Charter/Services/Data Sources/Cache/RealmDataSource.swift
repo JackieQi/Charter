@@ -10,22 +10,22 @@ import Foundation
 import RealmSwift
 
 class RealmDataSource: EmailThreadCacheDataSource {
-    private let realm: Realm
+    fileprivate let realm: Realm
     
     init(realm: Realm = try! Realm()) {
         self.realm = realm
     }
     
-    func getThreads(request: CachedThreadRequest, completion: [Email] -> Void) {
+    func getThreads(_ request: CachedThreadRequest, completion: ([Email]) -> Void) {
         let realmQuery = request.realmQuery
-        var results = realm.objects(Email).filter(realmQuery.predicate)
+        var results = realm.objects(Email.self).filter(realmQuery.predicate)
         
         if realmQuery.onlyComplete {
             results = results.filter("subject != '' AND from != '' AND mailingList != ''")
         }
         
         if let sort = realmQuery.sort {
-            results = results.sorted(sort.property, ascending: sort.ascending)
+            results = results.sorted(byProperty: sort.property, ascending: sort.ascending)
         }
         
         let start = realmQuery.pageSize * (realmQuery.page - 1)
@@ -43,9 +43,9 @@ class RealmDataSource: EmailThreadCacheDataSource {
         }
     }
     
-    func cacheEmails(emails: [NetworkEmail]) throws {
+    func cacheEmails(_ emails: [NetworkEmail]) throws {
         try emails.forEach { email in
-            try Email.createFromNetworkEmail(email, inRealm: realm)
+            _ = try Email.createFromNetworkEmail(email, inRealm: realm)
         }
     }
 }

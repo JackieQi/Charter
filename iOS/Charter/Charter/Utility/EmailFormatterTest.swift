@@ -34,23 +34,23 @@ class EmailFormatterTest: XCTestCase {
         // "ccc, dd MMM yyyy HH:mm:ss Z"
         let formatter = EmailFormatter()
         
-        let dateComponents = NSDateComponents()
+        var dateComponents = DateComponents()
         dateComponents.day = 25
         dateComponents.month = 1
         dateComponents.year = 2016
         dateComponents.hour = 15
         dateComponents.minute = 54
         dateComponents.second = 37
-        dateComponents.timeZone = NSTimeZone(abbreviation: "GMT")
+        (dateComponents as NSDateComponents).timeZone = TimeZone(abbreviation: "GMT")
         
-        let dateFromComponents: NSDate = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)!.dateFromComponents(dateComponents)!
+        let dateFromComponents: Date = Calendar(identifier: Calendar.Identifier.gregorian).date(from: dateComponents)!
         let dateAsString = "Mon, 25 Jan 2016 15:54:37 +0000"
         
         XCTAssertEqual(formatter.dateStringToDate(dateAsString), dateFromComponents)
         
-        let localDate = NSCalendar.currentCalendar().dateFromComponents(dateComponents)!
+        let localDate = Calendar.current.date(from: dateComponents)!
         
-        let dateFormatter = NSDateFormatter()
+        let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "d MMM"
         
         XCTAssertEqual(formatter.formatDate(localDate), dateFormatter.stringFromDate(localDate))

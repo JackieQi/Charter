@@ -9,7 +9,7 @@
 import UIKit
 
 extension NSMutableAttributedString {
-    func applyEachAttribute(attributes: [String: AnyObject], toEachRange ranges: [NSRange]) {
+    func applyEachAttribute(_ attributes: [String: AnyObject], toEachRange ranges: [NSRange]) {
         ranges.forEach { range in
             attributes.forEach {
                 self.addAttribute($0.0, value: $0.1, range: range)

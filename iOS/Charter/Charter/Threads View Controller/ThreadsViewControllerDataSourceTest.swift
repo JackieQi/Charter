@@ -10,27 +10,27 @@ import XCTest
 @testable import Charter
 
 private class Cache: EmailThreadCacheDataSource {
-    func getThreads(request: CachedThreadRequest, completion: [Email] -> Void) {}
+    func getThreads(_ request: CachedThreadRequest, completion: ([Email]) -> Void) {}
 
-    func cacheEmails(emails: [NetworkEmail]) throws {}
+    func cacheEmails(_ emails: [NetworkEmail]) throws {}
 }
 
 private class Network: EmailThreadNetworkDataSource {
-    func getThreads(request: UncachedThreadRequest, completion: [NetworkEmail] -> Void) {}
+    func getThreads(_ request: UncachedThreadRequest, completion: ([NetworkEmail]) -> Void) {}
 }
 
 class ThreadsViewControllerDataSourceImplTest: XCTestCase {
     func testDataSource() {
-        let shouldGetInitialCachedThreads = expectationWithDescription("should get initial cached threads")
+        let shouldGetInitialCachedThreads = expectation(description: "should get initial cached threads")
         
-        let shouldRefreshThreads = expectationWithDescription("should refresh threads when requested")
-        let shouldMakeCorrectRequestOnRefresh = expectationWithDescription("should make correct reqeuest on refresh")
+        let shouldRefreshThreads = expectation(description: "should refresh threads when requested")
+        let shouldMakeCorrectRequestOnRefresh = expectation(description: "should make correct reqeuest on refresh")
         
         let service = EmailThreadServiceMock(cacheDataSource: Cache(), networkDataSource: Network())
         
         let email1 = Email()
         email1.subject = "[swift-users] [Proposal] [Accepted] some subject"
-        email1.date = NSDate(timeIntervalSince1970: 100000)
+        email1.date = Date(timeIntervalSince1970: 100000)
         email1.from = "Matthew Palmer"
         email1.descendants.appendContentsOf([Email(), Email(), Email()])
         service.cachedThreads = [email1]
@@ -55,7 +55,7 @@ class ThreadsViewControllerDataSourceImplTest: XCTestCase {
         
         XCTAssertEqual(dataSource.tableView(tableView, numberOfRowsInSection: 0), 1)
         
-        let cell = dataSource.tableView(tableView, cellForRowAtIndexPath: NSIndexPath(forRow: 0, inSection: 0)) as! MessagePreviewTableViewCell
+        let cell = dataSource.tableView(tableView, cellForRowAtIndexPath: IndexPath(forRow: 0, inSection: 0)) as! MessagePreviewTableViewCell
         XCTAssertEqual(cell.subjectLabel.text, "some subject")
          // Lower case because we do small caps
         XCTAssertEqual(cell.timeLabel.text, "2 jan")
@@ -82,7 +82,7 @@ class ThreadsViewControllerDataSourceImplTest: XCTestCase {
             shouldRefreshThreads.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func testDataSourceForEmptyState() {
@@ -94,7 +94,7 @@ class ThreadsViewControllerDataSourceImplTest: XCTestCase {
         
         XCTAssertEqual(dataSource.tableView(tableView, numberOfRowsInSection: 0), 1)
         
-        let cell = dataSource.tableView(tableView, cellForRowAtIndexPath: NSIndexPath(forRow: 0, inSection: 0)) as! NoThreadsTableViewCell
+        let cell = dataSource.tableView(tableView, cellForRowAtIndexPath: IndexPath(forRow: 0, inSection: 0)) as! NoThreadsTableViewCell
         XCTAssertEqual(cell.titleLabel.text, "No Messages")
         XCTAssertEqual(cell.subtitleLabel.text, "Pull to refresh…")
         

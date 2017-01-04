@@ -1,18 +1,20 @@
 PODS:
-  - Realm (0.98.0):
-    - Realm/Headers (= 0.98.0)
-  - Realm/Headers (0.98.0)
-  - RealmSwift (0.98.0):
-    - Realm (= 0.98.0)
-  - SimulatorStatusMagic (1.7)
+  - Realm (1.1.0):
+    - Realm/Headers (= 1.1.0)
+  - Realm/Headers (1.1.0)
+  - RealmSwift (1.1.0):
+    - Realm (= 1.1.0)
+  - SimulatorStatusMagic (1.9.2)
 
 DEPENDENCIES:
-  - RealmSwift (~> 0.98.0)
+  - RealmSwift (~> 1.1.0)
   - SimulatorStatusMagic
 
 SPEC CHECKSUMS:
-  Realm: 28efc598b8b1b378d27a222d9fc037a29ae68642
-  RealmSwift: 7ef4b9ee449d711cd5a7d69a3af1cc5cd0efb619
-  SimulatorStatusMagic: 46c90a12f73abeda6d7c16876e1e0998b6ca5f4f
+  Realm: ceecf1a4540c4ce9efe196fe73fa9855bce05bd8
+  RealmSwift: 838058b2db95b12cb86bd0cf209df642c33fb60a
+  SimulatorStatusMagic: f6cf062b0e5a2df6f000bb0f98d1ae6977c8dbc1
 
-COCOAPODS: 0.39.0
+PODFILE CHECKSUM: c3b5fc7abb25a23700100e41afdf4eae6b32ab1e
+
+COCOAPODS: 1.1.1

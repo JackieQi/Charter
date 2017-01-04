@@ -20,7 +20,7 @@ class RealmDataSourceTest: XCTestCase {
     }
     
     func testLoadPrecachedEmails() {
-        let shouldLoadEmails = expectationWithDescription("should load correct cached emails")
+        let shouldLoadEmails = expectation(description: "should load correct cached emails")
         
         let builder = EmailThreadRequestBuilder()
         builder.page = 5
@@ -37,7 +37,7 @@ class RealmDataSourceTest: XCTestCase {
         
         // Load in data
         let data = dataForJSONFile("EmailThreadResponse")
-        let json = try! NSJSONSerialization.JSONObjectWithData(data, options: []) as! NSDictionary
+        let json = try! JSONSerialization.jsonObject(with: data, options: []) as! NSDictionary
         let emailDicts = ((json["_embedded"]! as! NSDictionary)["rh:doc"] as! Array<NSDictionary>)
         
         let threads: [Email] = emailDicts.map {
@@ -51,11 +51,11 @@ class RealmDataSourceTest: XCTestCase {
             shouldLoadEmails.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func testLoadEmailsForIdInSet() {
-        let shouldLoadEmails = expectationWithDescription("should load correct cached emails")
+        let shouldLoadEmails = expectation(description: "should load correct cached emails")
         
         // Load data
         let data = dataForJSONFile("EmailThreadResponse")
@@ -74,7 +74,7 @@ class RealmDataSourceTest: XCTestCase {
             shouldLoadEmails.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func networkEmailsInThread() -> [NetworkEmail] {
@@ -106,11 +106,11 @@ class RealmDataSourceTest: XCTestCase {
     func testCacheNetworkEmailsWhenUpdateShouldNotOccur() {
         let dataSource = RealmDataSource(realm: realm)
         
-        let fullExists = NetworkEmail(id: "one@example.com", from: "one", mailingList: "swift-evolution", content: "content 1", archiveURL: "archive url", date: NSDate(), subject: "subject", inReplyTo: nil, references: [], descendants: [])
+        let fullExists = NetworkEmail(id: "one@example.com", from: "one", mailingList: "swift-evolution", content: "content 1", archiveURL: "archive url", date: Date(), subject: "subject", inReplyTo: nil, references: [], descendants: [])
         
         try! dataSource.cacheEmails([fullExists])
         
-        let partialByReference = NetworkEmail(id: "two@example.com", from: "two", mailingList: "swift-evolution", content: "content", archiveURL: "archive url", date: NSDate(), subject: "sb", inReplyTo: nil, references: [fullExists.id], descendants: [])
+        let partialByReference = NetworkEmail(id: "two@example.com", from: "two", mailingList: "swift-evolution", content: "content", archiveURL: "archive url", date: Date(), subject: "sb", inReplyTo: nil, references: [fullExists.id], descendants: [])
         try! dataSource.cacheEmails([partialByReference])
         
         let first = realm.objects(Email).filter("id == %@", fullExists.id).first!

@@ -9,30 +9,30 @@
 import UIKit
 
 protocol CodeBlockParser {
-    func codeBlockRangesInText(text: String) -> [NSRange]
-    func inlineCodeRangesInText(text: String) -> [NSRange]
+    func codeBlockRangesInText(_ text: String) -> [NSRange]
+    func inlineCodeRangesInText(_ text: String) -> [NSRange]
 }
 
 class SwiftCodeBlockParser: CodeBlockParser {
-    func inlineCodeRangesInText(text: String) -> [NSRange] {
+    func inlineCodeRangesInText(_ text: String) -> [NSRange] {
         let regex = try! NSRegularExpression(pattern: "`[^`].*?`", options: []) // Must not include ```-style blocks
-        let matches = regex.matchesInString(text, options: [], range: NSMakeRange(0, text.characters.count))
+        let matches = regex.matches(in: text, options: [], range: NSMakeRange(0, text.characters.count))
         return matches.map { $0.range }
     }
     
-    func codeBlockRangesInText(text: String) -> [NSRange] {
+    func codeBlockRangesInText(_ text: String) -> [NSRange] {
         let swiftBlocks = swiftBlockRanges(text)
         let markdownBlocks = markdownBlockRanges(text)
         return markdownBlocks + swiftBlocks
     }
     
     /// Github flavoured code blocks.
-    private func markdownBlockRanges(text: String) -> [NSRange] {
-        let regex = try! NSRegularExpression(pattern: "^```.*?```[^\n]*\n", options: [.DotMatchesLineSeparators, .AnchorsMatchLines])
-        return regex.matchesInString(text, options: [], range: NSMakeRange(0, text.characters.count)).map { $0.range }
+    fileprivate func markdownBlockRanges(_ text: String) -> [NSRange] {
+        let regex = try! NSRegularExpression(pattern: "^```.*?```[^\n]*\n", options: [.dotMatchesLineSeparators, .anchorsMatchLines])
+        return regex.matches(in: text, options: [], range: NSMakeRange(0, text.characters.count)).map { $0.range }
     }
     
-    private func swiftBlockRanges(text: String) -> [NSRange] {
+    fileprivate func swiftBlockRanges(_ text: String) -> [NSRange] {
         return []
     }
     

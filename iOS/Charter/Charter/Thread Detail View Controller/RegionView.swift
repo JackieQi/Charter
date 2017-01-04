@@ -9,12 +9,12 @@
 import UIKit
 
 protocol RegionViewDataSource: class {
-    func numberOfRegionsInRegionView(regionView: RegionView) -> Int
-    func regionView(regionView: RegionView, viewForRegionAtIndex: Int) -> UIView
+    func numberOfRegionsInRegionView(_ regionView: RegionView) -> Int
+    func regionView(_ regionView: RegionView, viewForRegionAtIndex: Int) -> UIView
 }
 
 protocol RegionViewDelegate: class {
-    func regionView(regionView: RegionView, didFinishReplacingRegionAtIndex: Int)
+    func regionView(_ regionView: RegionView, didFinishReplacingRegionAtIndex: Int)
 }
 
 /// A vertical stack view abstracted into regions.
@@ -31,8 +31,8 @@ class RegionView: UIView {
     
     lazy var stackView: UIStackView = {
         let stackView = UIStackView()
-        stackView.backgroundColor = .redColor()
-        stackView.axis = .Vertical
+        stackView.backgroundColor = .red
+        stackView.axis = .vertical
         return stackView
     }()
     
@@ -41,14 +41,14 @@ class RegionView: UIView {
         postInit()
     }
     
-    override class func requiresConstraintBasedLayout() -> Bool { return true }
+    override class var requiresConstraintBasedLayout : Bool { return true }
     
     required init?(coder aDecoder: NSCoder) {
-        super.init(frame: CGRectZero)
+        super.init(frame: CGRect.zero)
         postInit()
     }
     
-    private func postInit() {
+    fileprivate func postInit() {
         addSubview(stackView)
         translatesAutoresizingMaskIntoConstraints = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -57,10 +57,10 @@ class RegionView: UIView {
     override func updateConstraints() {
         super.updateConstraints()
         
-        let top = NSLayoutConstraint(item: stackView, attribute: .Top, relatedBy: .Equal, toItem: self, attribute: .Top, multiplier: 1.0, constant: 0.0)
-        let left = NSLayoutConstraint(item: stackView, attribute: .Left, relatedBy: .Equal, toItem: self, attribute: .Left, multiplier: 1.0, constant: 0.0)
-        let right = NSLayoutConstraint(item: stackView, attribute: .Right, relatedBy: .Equal, toItem: self, attribute: .Right, multiplier: 1.0, constant: 0.0)
-        let bottom = NSLayoutConstraint(item: stackView, attribute: .Bottom, relatedBy: .Equal, toItem: self, attribute: .Bottom, multiplier: 1.0, constant: 0.0)
+        let top = NSLayoutConstraint(item: stackView, attribute: .top, relatedBy: .equal, toItem: self, attribute: .top, multiplier: 1.0, constant: 0.0)
+        let left = NSLayoutConstraint(item: stackView, attribute: .left, relatedBy: .equal, toItem: self, attribute: .left, multiplier: 1.0, constant: 0.0)
+        let right = NSLayoutConstraint(item: stackView, attribute: .right, relatedBy: .equal, toItem: self, attribute: .right, multiplier: 1.0, constant: 0.0)
+        let bottom = NSLayoutConstraint(item: stackView, attribute: .bottom, relatedBy: .equal, toItem: self, attribute: .bottom, multiplier: 1.0, constant: 0.0)
         
         addConstraints([top, left, right, bottom])
     }
@@ -77,14 +77,14 @@ class RegionView: UIView {
         }
     }
     
-    func replaceRegionAtIndex(index: Int, withView replacementView: UIView) {
+    func replaceRegionAtIndex(_ index: Int, withView replacementView: UIView) {
         let originalView = stackView.arrangedSubviews[index]
-        replacementView.hidden = true
-        originalView.hidden = true
+        replacementView.isHidden = true
+        originalView.isHidden = true
         
-        self.stackView.insertArrangedSubview(replacementView, atIndex: index)
+        self.stackView.insertArrangedSubview(replacementView, at: index)
         self.stackView.removeArrangedSubview(originalView)
-        replacementView.hidden = false
+        replacementView.isHidden = false
         self.delegate?.regionView(self, didFinishReplacingRegionAtIndex: index)
     }
 }

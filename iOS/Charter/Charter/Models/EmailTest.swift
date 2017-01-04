@@ -54,10 +54,10 @@ class EmailTest: XCTestCase {
         XCTAssertEqual(email.inReplyTo, nil)
         
         let dateString = "2016-02-11 16:52:18 +0000"
-        let dateFormatter = NSDateFormatter()
+        let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
         
-        let date = dateFormatter.dateFromString(dateString)
+        let date = dateFormatter.date(from: dateString)
         XCTAssertEqual(email.date, date)
         
         XCTAssertEqual(Array(email.references), [])
@@ -254,7 +254,7 @@ class EmailTest: XCTestCase {
     }
     
     func testInitFromJSONWhereRequiredFieldsAreNotPresent() {
-        let expectation = expectationWithDescription("Should throw if not present")
+        let expectation = self.expectation(description: "Should throw if not present")
         
         do {
             let _ = try Email.createFromData(dataForJSONFile("EmailInvalid"), inRealm: realm)
@@ -262,7 +262,7 @@ class EmailTest: XCTestCase {
             expectation.fulfill()
         }
         
-        waitForExpectationsWithTimeout(1.0, handler: nil)
+        waitForExpectations(timeout: 1.0, handler: nil)
     }
     
     func testInitFromJSONWhereOptionalFieldsAreNotPresent() {
@@ -274,7 +274,7 @@ class EmailTest: XCTestCase {
     }
     
     func testInitFromNetworkEmailWhereEmailReferencesItself() {
-        let networkEmail = NetworkEmail(id: "one@example.com", from: "f", mailingList: "list", content: "content", archiveURL: "archiv", date: NSDate(), subject: "subjecg", inReplyTo: "one@example.com", references: ["one@example.com"], descendants: ["one@example.com"])
+        let networkEmail = NetworkEmail(id: "one@example.com", from: "f", mailingList: "list", content: "content", archiveURL: "archiv", date: Date(), subject: "subjecg", inReplyTo: "one@example.com", references: ["one@example.com"], descendants: ["one@example.com"])
         let email = try! Email.createFromNetworkEmail(networkEmail, inRealm: realm)
         XCTAssertEqual(email.id, "one@example.com")
         XCTAssertEqual(email.references.first!.id, email.id)
@@ -299,7 +299,7 @@ class EmailTest: XCTestCase {
             "9643FE18-C60C-4B0C-A23D-0B9B2CA06908@gmail.com"
         ]
         
-        let networkEmail = NetworkEmail(id: originalId, from: "Joe", mailingList: "s", content: "c", archiveURL: "a", date: NSDate(), subject: "s", inReplyTo: inReplyTo, references: references, descendants: descendants)
+        let networkEmail = NetworkEmail(id: originalId, from: "Joe", mailingList: "s", content: "c", archiveURL: "a", date: Date(), subject: "s", inReplyTo: inReplyTo, references: references, descendants: descendants)
         let email = try! Email.createFromNetworkEmail(networkEmail, inRealm: realm)
         
         XCTAssertEqual(email.id, originalId)

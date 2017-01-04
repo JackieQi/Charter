@@ -10,32 +10,32 @@ import UIKit
 
 /// Used to redirect the UITableViewDelegate indentation level to a data source.
 protocol TableViewCellIndentationLevelDataSource: class {
-    func tableView(tableView: UITableView, indentationLevelForRowAtIndexPath indexPath: NSIndexPath) -> Int
+    func tableView(_ tableView: UITableView, indentationLevelForRowAtIndexPath indexPath: IndexPath) -> Int
 }
 
 protocol ThreadDetailDataSource: class, UITableViewDataSource, TableViewCellIndentationLevelDataSource {
     var cellDelegate: FullEmailMessageTableViewCellDelegate? { get set }
-    func registerTableView(tableView: UITableView)
+    func registerTableView(_ tableView: UITableView)
 }
 
 class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
-    private let service: EmailThreadService
+    fileprivate let service: EmailThreadService
     weak var cellDelegate: FullEmailMessageTableViewCellDelegate?
     
-    private let cellIdentifier = "emailCell"
+    fileprivate let cellIdentifier = "emailCell"
     
-    private var indentationAndEmail: [(Int, Email)] = [] {
+    fileprivate var indentationAndEmail: [(Int, Email)] = [] {
         didSet {
-            textViewDataSources = [NSIndexPath: EmailTextRegionViewDataSource]()
+            textViewDataSources = [IndexPath: EmailTextRegionViewDataSource]()
         }
     }
     
-    private let codeBlockParser: CodeBlockParser
-    private let rootEmail: Email
-    private var textViewDataSources: [NSIndexPath: EmailTextRegionViewDataSource] = [NSIndexPath: EmailTextRegionViewDataSource]()
-    private lazy var emailFormatter: EmailFormatter = EmailFormatter()
+    fileprivate let codeBlockParser: CodeBlockParser
+    fileprivate let rootEmail: Email
+    fileprivate var textViewDataSources: [IndexPath: EmailTextRegionViewDataSource] = [IndexPath: EmailTextRegionViewDataSource]()
+    fileprivate lazy var emailFormatter: EmailFormatter = EmailFormatter()
     
-    private var emails: [Email] = [] {
+    fileprivate var emails: [Email] = [] {
         didSet {
             self.indentationAndEmail = self.computeIndentationLevels(rootEmail)
         }
@@ -48,8 +48,8 @@ class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
         super.init()
     }
     
-    func registerTableView(tableView: UITableView) {
-        tableView.registerNib(FullEmailMessageTableViewCell.nib(), forCellReuseIdentifier: cellIdentifier)
+    func registerTableView(_ tableView: UITableView) {
+        tableView.register(FullEmailMessageTableViewCell.nib(), forCellReuseIdentifier: cellIdentifier)
         
         service.getCachedThreads(descendantsRequestForRootEmail(rootEmail)) { (emails) -> Void in
             self.emails = emails
@@ -65,12 +65,12 @@ class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
         }
     }
     
-    func tableView(tableView: UITableView, indentationLevelForRowAtIndexPath indexPath: NSIndexPath) -> Int {
+    func tableView(_ tableView: UITableView, indentationLevelForRowAtIndexPath indexPath: IndexPath) -> Int {
         return indentationAndEmail[indexPath.row].0
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier) as! FullEmailMessageTableViewCell
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier) as! FullEmailMessageTableViewCell
         let email = indentationAndEmail[indexPath.row].1
         
         cell.indentationLevel = indentationAndEmail[indexPath.row].0
@@ -93,11 +93,11 @@ class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
         return cell
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return indentationAndEmail.count
     }
     
-    private func descendantsRequestForRootEmail(rootEmail: Email) -> EmailThreadRequest {
+    fileprivate func descendantsRequestForRootEmail(_ rootEmail: Email) -> EmailThreadRequest {
         let builder = EmailThreadRequestBuilder()
         builder.idIn = Array(rootEmail.descendants.map { $0.id })
         builder.page = 1
@@ -106,7 +106,7 @@ class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
         return builder.build()
     }
     
-    private func computeIndentationLevels(rootEmail: Email) -> [(Int, Email)] {
+    fileprivate func computeIndentationLevels(_ rootEmail: Email) -> [(Int, Email)] {
         var children = [String: [Email]]()
         for email in rootEmail.descendants {
             if let inReplyTo = email.inReplyTo {
@@ -119,14 +119,14 @@ class ThreadDetailDataSourceImpl: NSObject, ThreadDetailDataSource {
         }
         
         for id in children.keys {
-            children[id] = children[id]?.sort { $0.date.compare($1.date) == NSComparisonResult.OrderedAscending }
+            children[id] = children[id]?.sorted { $0.date.compare($1.date as Date) == ComparisonResult.orderedAscending }
         }
         
-        func indentationLevel(root: Email, indentLevel: Int) -> [(Int, Email)] {
+        func indentationLevel(_ root: Email, indentLevel: Int) -> [(Int, Email)] {
             var list = [(Int, Email)]()
             for child in children[root.id] ?? [] {
                 if child.id != root.id {
-                    list.appendContentsOf(indentationLevel(child, indentLevel: indentLevel + 1))
+                    list.append(contentsOf: indentationLevel(child, indentLevel: indentLevel + 1))
                 }
             }
             return [(indentLevel, root)] + list

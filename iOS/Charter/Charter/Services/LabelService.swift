@@ -9,12 +9,12 @@
 import UIKit
 
 protocol LabelService {
-    func colorForLabel(label: String) -> UIColor
-    func formattedStringForLabel(label: String) -> String
+    func colorForLabel(_ label: String) -> UIColor
+    func formattedStringForLabel(_ label: String) -> String
 }
 
 extension LabelService {
-    func colorForLabel(label: String) -> UIColor {
+    func colorForLabel(_ label: String) -> UIColor {
         let formattedLabel = formattedStringForLabel(label)
         
         switch formattedLabel {
@@ -41,8 +41,8 @@ extension LabelService {
         }
     }
     
-    func formattedStringForLabel(label: String) -> String {
-        return label.lowercaseString
+    func formattedStringForLabel(_ label: String) -> String {
+        return label.lowercased()
     }
 }
 

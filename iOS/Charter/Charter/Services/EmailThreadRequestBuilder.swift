@@ -7,6 +7,30 @@
 //
 
 import Foundation
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 class EmailThreadRequestBuilder {
     var page: Int?
@@ -55,7 +79,7 @@ private struct EmailThreadRequestImpl: EmailThreadRequest {
         }
         
         if let mailingList = mailingList {
-            filter["mailingList"] = Either.Left(mailingList)
+            filter["mailingList"] = Either.left(mailingList)
         }
         
         // Members of this list are special queries whose filter values do not want single quotes around them
@@ -66,27 +90,27 @@ private struct EmailThreadRequestImpl: EmailThreadRequest {
 
             let inQuery = "{$in:[" + idIn.map {
                 // NSURLComponents won't escape '+' for us
-                let escaped = $0.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet(charactersInString: "+").invertedSet) ?? ""
+                let escaped = $0.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "+").inverted) ?? ""
                 return "'\(escaped)'"
-            }.joinWithSeparator(",") + "]}"
+            }.joined(separator: ",") + "]}"
             
-            filter["_id"] = Either.Left(inQuery)
+            filter["_id"] = Either.left(inQuery)
         }
         
-        let filterArgs = filter.sort { $0.0 < $1.0 }.map { (pair: (String, Either<String, NSNull>)) -> String in
+        let filterArgs = filter.sorted { $0.0 < $1.0 }.map { (pair: (String, Either<String, NSNull>)) -> String in
             let key = pair.0
             let either = pair.1
             
             let valueString: String
             switch either {
-            case .Left(let value):
+            case .left(let value):
                 let isOnWhiteList = quoteWhiteList.map { value.hasPrefix($0) }.filter { $0 == true }.count > 0
                 if isOnWhiteList {
                     valueString = "\(value)"
                 } else {
                     valueString = "'\(value)'"
                 }
-            case .Right:
+            case .right:
                 valueString = "null"
             }
             return "\(key):\(valueString)"
@@ -96,7 +120,7 @@ private struct EmailThreadRequestImpl: EmailThreadRequest {
         
         dictionary["filter"] = filterValueString
         
-        if let sort = sort where sort.count > 0 {
+        if let sort = sort, sort.count > 0 {
             dictionary["sort_by"] = "\(sort.first!.1 ? "" : "-")\(sort.first!.0)"
         }
         
@@ -117,9 +141,9 @@ private struct EmailThreadRequestImpl: EmailThreadRequest {
         if let inReplyTo = inReplyTo {
             let filterValueString: String
             switch inReplyTo {
-            case .Left(let value):
+            case .left(let value):
                 filterValueString = "'\(value)'"
-            case .Right:
+            case .right:
                 filterValueString = "nil"
             }
             
@@ -131,18 +155,18 @@ private struct EmailThreadRequestImpl: EmailThreadRequest {
         }
         
         if let idIn = idIn {
-            let component = "id IN {" + idIn.map { "'\($0)'" }.joinWithSeparator(",") + "}"
+            let component = "id IN {" + idIn.map { "'\($0)'" }.joined(separator: ",") + "}"
             predicateComponents.append(component)
         }
         
-        let predicate = NSPredicate(format: predicateComponents.joinWithSeparator(" AND "))
+        let predicate = NSPredicate(format: predicateComponents.joined(separator: " AND "))
         
         let query = RealmQuery(predicate: predicate, sort: self.sort?.first, page: page ?? 1, pageSize: pageSize ?? 25, onlyComplete: onlyComplete)
         return query
     }
 }
 
-private func jsonFromEntryStrings(entries: [String]) -> String {
+private func jsonFromEntryStrings(_ entries: [String]) -> String {
     var str = "{"
     for entry in entries {
         if entry == entries.last {

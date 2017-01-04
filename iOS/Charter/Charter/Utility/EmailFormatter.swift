@@ -9,51 +9,51 @@
 import UIKit
 
 class EmailFormatter {
-    private lazy var squareBracketAtStartRegex: NSRegularExpression = {
-        return try! NSRegularExpression(pattern: "^\\[.*?\\]", options: .CaseInsensitive)
+    fileprivate lazy var squareBracketAtStartRegex: NSRegularExpression = {
+        return try! NSRegularExpression(pattern: "^\\[.*?\\]", options: .caseInsensitive)
     }()
     
-    private lazy var withinParenthesesRegex: NSRegularExpression = {
-        return try! NSRegularExpression(pattern: "\\((.*)\\)", options: .CaseInsensitive)
+    fileprivate lazy var withinParenthesesRegex: NSRegularExpression = {
+        return try! NSRegularExpression(pattern: "\\((.*)\\)", options: .caseInsensitive)
     }()
     
-    private lazy var sourceDateFormatter: NSDateFormatter = {
-        let df = NSDateFormatter()
+    fileprivate lazy var sourceDateFormatter: DateFormatter = {
+        let df = DateFormatter()
         df.dateFormat = "ccc, dd MMM yyyy HH:mm:ss Z"
-        df.timeZone = NSTimeZone(abbreviation: "GMT")
+        df.timeZone = TimeZone(abbreviation: "GMT")
         return df
     }()
     
-    private lazy var destinationDateFormatter: NSDateFormatter = {
-        let df = NSDateFormatter()
+    fileprivate lazy var destinationDateFormatter: DateFormatter = {
+        let df = DateFormatter()
         df.dateFormat = "d MMM"
         return df
     }()
     
-    private lazy var footerBoilerPlateRegex: NSRegularExpression = {
-        return try! NSRegularExpression(pattern: "_______________________________________________.*?$", options: NSRegularExpressionOptions.DotMatchesLineSeparators)
+    fileprivate lazy var footerBoilerPlateRegex: NSRegularExpression = {
+        return try! NSRegularExpression(pattern: "_______________________________________________.*?$", options: NSRegularExpression.Options.dotMatchesLineSeparators)
     }()
     
-    func formatContent(content: String) -> String {
-        let noFooter = footerBoilerPlateRegex.stringByReplacingMatchesInString(content, options: [], range: NSMakeRange(0, content.characters.count), withTemplate: "")
+    func formatContent(_ content: String) -> String {
+        let noFooter = footerBoilerPlateRegex.stringByReplacingMatches(in: content, options: [], range: NSMakeRange(0, content.characters.count), withTemplate: "")
         return noFooter
     }
     
-    func formatSubject(subject: String) -> String {
-        let noSquareBrackets = squareBracketAtStartRegex.stringByReplacingMatchesInString(subject, options: [], range: NSMakeRange(0, subject.characters.count), withTemplate: "")
-        return noSquareBrackets.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+    func formatSubject(_ subject: String) -> String {
+        let noSquareBrackets = squareBracketAtStartRegex.stringByReplacingMatches(in: subject, options: [], range: NSMakeRange(0, subject.characters.count), withTemplate: "")
+        return noSquareBrackets.trimmingCharacters(in: CharacterSet.whitespaces)
     }
     
-    private lazy var squareBracketForLabelRegex: NSRegularExpression = {
+    fileprivate lazy var squareBracketForLabelRegex: NSRegularExpression = {
         // ^(\[[^\]]*\])+
         return try! NSRegularExpression(pattern: "^(\\[[^\\]]*\\]\\s*)+", options: [])
     }()
     
-    private lazy var issueKeyRegex: NSRegularExpression = {
-        return try! NSRegularExpression(pattern: "^([a-z]+-[0-9]+):?", options: .CaseInsensitive)
+    fileprivate lazy var issueKeyRegex: NSRegularExpression = {
+        return try! NSRegularExpression(pattern: "^([a-z]+-[0-9]+):?", options: .caseInsensitive)
     }()
     
-    func labelsInSubject(string: String) -> [String] {
+    func labelsInSubject(_ string: String) -> [String] {
         let squareBrackets = squareBracketedLabels(string)
         if let issueKeys = issueKeyLabel(string) {
             return squareBrackets + [issueKeys]
@@ -62,51 +62,51 @@ class EmailFormatter {
         return squareBrackets
     }
     
-    private func squareBracketedLabels(string: String) -> [String] {
-        let allLabelsStringMatch = squareBracketForLabelRegex.matchesInString(string, options: [], range: NSMakeRange(0, string.characters.count))
+    fileprivate func squareBracketedLabels(_ string: String) -> [String] {
+        let allLabelsStringMatch = squareBracketForLabelRegex.matches(in: string, options: [], range: NSMakeRange(0, string.characters.count))
         guard let first = allLabelsStringMatch.first else {
             return []
         }
         
-        return (string as NSString).substringWithRange(first.range)
-            .componentsSeparatedByString("]")
+        return (string as NSString).substring(with: first.range)
+            .components(separatedBy: "]")
             .map {
-                $0.stringByReplacingOccurrencesOfString("[", withString: "")
-                    .stringByTrimmingCharactersInSet(.whitespaceCharacterSet())
+                $0.replacingOccurrences(of: "[", with: "")
+                    .trimmingCharacters(in: .whitespaces)
             }.filter { $0 != "" && $0 != "]" }
     }
     
-    private func issueKeyLabel(string: String) -> String? {
+    fileprivate func issueKeyLabel(_ string: String) -> String? {
         // Square bracketed labels conventionally precede issue key labels
         let noSquareBrackets = subjectByRemovingSquareBracketLabels(string)
-        guard let match = issueKeyRegex.firstMatchInString(noSquareBrackets, options: [], range: NSMakeRange(0, noSquareBrackets.characters.count)) else { return nil }
-        return (noSquareBrackets as NSString).substringWithRange(match.range).stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: ":"))
+        guard let match = issueKeyRegex.firstMatch(in: noSquareBrackets, options: [], range: NSMakeRange(0, noSquareBrackets.characters.count)) else { return nil }
+        return (noSquareBrackets as NSString).substring(with: match.range).trimmingCharacters(in: CharacterSet(charactersIn: ":"))
     }
     
-    func subjectByRemovingLabels(string: String) -> String {
+    func subjectByRemovingLabels(_ string: String) -> String {
         let noSquareBrackets = subjectByRemovingSquareBracketLabels(string)
         let withoutIssueKey = removeLeadingIssueKey(noSquareBrackets)
         return withoutIssueKey.characters.count == 0 ? noSquareBrackets : withoutIssueKey
     }
     
-    private func subjectByRemovingSquareBracketLabels(string: String) -> String {
-        let allLabelsStringMatch = squareBracketForLabelRegex.matchesInString(string, options: [], range: NSMakeRange(0, string.characters.count))
+    fileprivate func subjectByRemovingSquareBracketLabels(_ string: String) -> String {
+        let allLabelsStringMatch = squareBracketForLabelRegex.matches(in: string, options: [], range: NSMakeRange(0, string.characters.count))
         guard let first = allLabelsStringMatch.first else {
             return string
         }
         
-        return (string as NSString).stringByReplacingCharactersInRange(first.range, withString: "").stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+        return (string as NSString).replacingCharacters(in: first.range, with: "").trimmingCharacters(in: CharacterSet.whitespaces)
     }
     
-    private func removeLeadingIssueKey(string: String) -> String {
-        guard let issueKey = issueKeyRegex.firstMatchInString(string, options: [], range: NSMakeRange(0, string.characters.count)) else { return string }
-        return (string as NSString).stringByReplacingCharactersInRange(issueKey.range, withString: "").stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+    fileprivate func removeLeadingIssueKey(_ string: String) -> String {
+        guard let issueKey = issueKeyRegex.firstMatch(in: string, options: [], range: NSMakeRange(0, string.characters.count)) else { return string }
+        return (string as NSString).replacingCharacters(in: issueKey.range, with: "").trimmingCharacters(in: CharacterSet.whitespaces)
     }
     
-    func formatName(name: String) -> String {
-        let firstMatch = withinParenthesesRegex.firstMatchInString(name, options: [], range: NSMakeRange(0, name.characters.count))
-        let range = firstMatch?.rangeAtIndex(1) ?? NSMakeRange(0, name.characters.count)
-        let withinParens = (name as NSString).substringWithRange(range)
+    func formatName(_ name: String) -> String {
+        let firstMatch = withinParenthesesRegex.firstMatch(in: name, options: [], range: NSMakeRange(0, name.characters.count))
+        let range = firstMatch?.rangeAt(1) ?? NSMakeRange(0, name.characters.count)
+        let withinParens = (name as NSString).substring(with: range)
         
         // The server sometimes sends us ?utf-8? junk, and there's nothing we can do.
         let noJunk: String
@@ -119,11 +119,11 @@ class EmailFormatter {
         return noJunk
     }
     
-    func dateStringToDate(date: String) -> NSDate? {
-        return sourceDateFormatter.dateFromString(date)
+    func dateStringToDate(_ date: String) -> Date? {
+        return sourceDateFormatter.date(from: date)
     }
     
-    func formatDate(date: NSDate) -> String {
-        return destinationDateFormatter.stringFromDate(date)
+    func formatDate(_ date: Date) -> String {
+        return destinationDateFormatter.string(from: date)
     }
 }

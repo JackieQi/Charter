@@ -4,7 +4,7 @@ platform :ios, '9.0'
 use_frameworks!
 
 target 'Charter' do
-  pod 'RealmSwift', '~> 0.98.0'
+  pod 'RealmSwift', '~> 1.1.0'
 end
 
 target 'CharterUITests' do

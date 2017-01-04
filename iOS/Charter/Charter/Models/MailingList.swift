@@ -21,20 +21,20 @@ struct _MailingList: MailingListType {
 enum MailingList: RawRepresentable {
     typealias RawValue = MailingListType
 
-    case SwiftEvolution, SwiftUsers, SwiftDev, SwiftBuildDev
+    case swiftEvolution, swiftUsers, swiftDev, swiftBuildDev
 
-    static var cases: [MailingList] = [.SwiftEvolution, .SwiftUsers, .SwiftDev, .SwiftBuildDev]
+    static var cases: [MailingList] = [.swiftEvolution, .swiftUsers, .swiftDev, .swiftBuildDev]
 
     init?(rawValue: MailingListType) {
         switch rawValue.identifier {
         case "swift-evolution":
-            self = .SwiftEvolution
+            self = .swiftEvolution
         case "swift-users":
-            self = .SwiftUsers
+            self = .swiftUsers
         case "swift-dev":
-            self = .SwiftDev
+            self = .swiftDev
         case "swift-build-dev":
-            self = .SwiftBuildDev
+            self = .swiftBuildDev
         default:
             return nil
         }
@@ -42,13 +42,13 @@ enum MailingList: RawRepresentable {
 
     var rawValue: MailingListType {
         switch self {
-        case .SwiftEvolution:
+        case .swiftEvolution:
             return _MailingList(identifier: "swift-evolution", name: Localizable.Strings.swiftEvolution)
-        case .SwiftUsers:
+        case .swiftUsers:
             return _MailingList(identifier: "swift-users", name: Localizable.Strings.swiftUsers)
-        case .SwiftDev:
+        case .swiftDev:
             return _MailingList(identifier: "swift-dev", name: Localizable.Strings.swiftDev)
-        case .SwiftBuildDev:
+        case .swiftBuildDev:
             return _MailingList(identifier: "swift-build-dev", name: Localizable.Strings.swiftBuildDev)
         }
     }

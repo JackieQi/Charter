@@ -9,21 +9,21 @@
 import UIKit
 
 protocol ThreadsViewControllerDelegate: class {
-    func threadsViewController(threadsViewController: ThreadsViewController, didSelectEmail email: Email)
-    func threadsViewController(threadsViewController: ThreadsViewController, didSearchWithPhrase phrase: String, inMailingList mailingList: MailingListType)
+    func threadsViewController(_ threadsViewController: ThreadsViewController, didSelectEmail email: Email)
+    func threadsViewController(_ threadsViewController: ThreadsViewController, didSearchWithPhrase phrase: String, inMailingList mailingList: MailingListType)
 }
 
 class ThreadsViewController: UIViewController, UITableViewDelegate, UISearchBarDelegate, UIGestureRecognizerDelegate {
     @IBOutlet weak var tableView: UITableView!
     
-    private let dataSource: ThreadsViewControllerDataSource
+    fileprivate let dataSource: ThreadsViewControllerDataSource
     
     weak var delegate: ThreadsViewControllerDelegate?
     
     var searchEnabled = true
     var refreshEnabled = true
     
-    private let searchController = UISearchController(searchResultsController: nil)
+    fileprivate let searchController = UISearchController(searchResultsController: nil)
     
     init(dataSource: ThreadsViewControllerDataSource) {
         self.dataSource = dataSource
@@ -36,7 +36,7 @@ class ThreadsViewController: UIViewController, UITableViewDelegate, UISearchBarD
     
     lazy var refreshControl: UIRefreshControl = {
         let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(ThreadsViewController.didRequestRefresh(_:)), forControlEvents: .ValueChanged)
+        refreshControl.addTarget(self, action: #selector(ThreadsViewController.didRequestRefresh(_:)), for: .valueChanged)
         return refreshControl
     }()
     
@@ -69,28 +69,28 @@ class ThreadsViewController: UIViewController, UITableViewDelegate, UISearchBarD
         // Check whether we are running UI tests before performing an automatic refresh.
         // If we refresh immediately the screenshots (which we take with Fastlane in doing the UI tests)
         // will be in an undefined state.
-        if !NSUserDefaults.standardUserDefaults().boolForKey("FASTLANE_SNAPSHOT") {
+        if !UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
             didRequestRefresh(self)
         }
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
         if let selected = tableView.indexPathForSelectedRow {
-            tableView.deselectRowAtIndexPath(selected, animated: true)
+            tableView.deselectRow(at: selected, animated: true)
         }
     }
     
-    private func updateSeparatorStyle() {
+    fileprivate func updateSeparatorStyle() {
         if dataSource.isEmpty {
-            tableView.separatorStyle = .None
+            tableView.separatorStyle = .none
         } else {
-            tableView.separatorStyle = .SingleLine
+            tableView.separatorStyle = .singleLine
         }
     }
     
-    func didRequestRefresh(sender: AnyObject) {
+    func didRequestRefresh(_ sender: AnyObject) {
         dataSource.refreshDataFromNetwork { (success) -> Void in
             self.refreshControl.endRefreshing()
             self.tableView.reloadData()
@@ -98,38 +98,38 @@ class ThreadsViewController: UIViewController, UITableViewDelegate, UISearchBarD
         }
     }
     
-    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         if dataSource.isEmpty {
-            cell.userInteractionEnabled = false
+            cell.isUserInteractionEnabled = false
         }
         
         if searchEnabled && cell is MessagePreviewTableViewCell {
             let messageCell = cell as! MessagePreviewTableViewCell
-            messageCell.labelStackView.userInteractionEnabled = true
+            messageCell.labelStackView.isUserInteractionEnabled = true
             messageCell.labelStackView.arrangedSubviews.forEach { labelView in
                 let tap = UITapGestureRecognizer(target: self, action: #selector(ThreadsViewController.didTapLabelInCell(_:)))
-                labelView.userInteractionEnabled = true
+                labelView.isUserInteractionEnabled = true
                 labelView.addGestureRecognizer(tap)
                 
             }
         }
     }
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         delegate?.threadsViewController(self, didSelectEmail: dataSource.emailAtIndexPath(indexPath))
     }
     
-    func searchBarSearchButtonClicked(searchBar: UISearchBar) {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         delegate?.threadsViewController(self, didSearchWithPhrase: searchBar.text ?? "", inMailingList: dataSource.mailingList)
     }
     
-    func didTapLabelInCell(sender: UIGestureRecognizer) {
+    func didTapLabelInCell(_ sender: UIGestureRecognizer) {
         if let label = sender.view as? UILabel {
-            let text = label.text?.lowercaseString ?? ""
-            let regex = try! NSRegularExpression(pattern: "[a-z]+-[0-9]+", options: .CaseInsensitive)
+            let text = label.text?.lowercased() ?? ""
+            let regex = try! NSRegularExpression(pattern: "[a-z]+-[0-9]+", options: .caseInsensitive)
             let searchText: String
             // If searching for an issue key (e.g. SE-0048), don't use square brackets
-            if regex.matchesInString(text, options: [], range: NSMakeRange(0, text.characters.count)).count > 0 {
+            if regex.matches(in: text, options: [], range: NSMakeRange(0, text.characters.count)).count > 0 {
                 searchText = text
             } else {
                 searchText = "[\(text)]"

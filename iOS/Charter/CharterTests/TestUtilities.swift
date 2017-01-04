@@ -23,19 +23,19 @@ extension XCTestCase {
         return realm
     }
     
-    func testBundle() -> NSBundle {
-        return NSBundle(forClass: self.dynamicType)
+    func testBundle() -> Bundle {
+        return Bundle(for: type(of: self))
     }
     
-    func dataForJSONFile(file: String) -> NSData {
-        let fileURL = testBundle().URLForResource(file, withExtension: "json")!
-        return NSData(contentsOfURL: fileURL)!
+    func dataForJSONFile(_ file: String) -> Data {
+        let fileURL = testBundle().url(forResource: file, withExtension: "json")!
+        return (try! Data(contentsOf: fileURL))
     }
 }
 
-class NSURLSessionDataTaskMock : NSURLSessionDataTask {
-    var completionHandler: ((NSData!, NSURLResponse!, NSError!) -> Void?)?
-    var completionArguments: (data: NSData?, response: NSURLResponse?, error: NSError?)
+class NSURLSessionDataTaskMock : URLSessionDataTask {
+    var completionHandler: ((Data?, URLResponse?, NSError?) -> Void?)?
+    var completionArguments: (data: Data?, response: URLResponse?, error: NSError?)
     
     override func resume() {
         completionHandler?(completionArguments.data, completionArguments.response, completionArguments.error)
@@ -45,13 +45,13 @@ class NSURLSessionDataTaskMock : NSURLSessionDataTask {
 class NetworkingSessionMock: NetworkingSession {
     let dataTask: NSURLSessionDataTaskMock
     
-    var assertionBlockForRequest: ((NSURLRequest) -> Void)?
+    var assertionBlockForRequest: ((URLRequest) -> Void)?
     
     init(dataTask: NSURLSessionDataTaskMock) {
         self.dataTask = dataTask
     }
     
-    func dataTaskWithRequest(request: NSURLRequest, completionHandler: (NSData?, NSURLResponse?, NSError?) -> Void) -> NSURLSessionDataTask {
+    func dataTaskWithRequest(_ request: URLRequest, completionHandler: @escaping (Data?, URLResponse?, NSError?) -> Void) -> URLSessionDataTask {
         assertionBlockForRequest?(request)
         
         dataTask.completionHandler = completionHandler
@@ -63,23 +63,23 @@ class EmailThreadServiceMock: EmailThreadService {
     var cachedThreads: [Email] = []
     var uncachedThreads: [Email] = []
     
-    var getCachedThreadsAssertionBlock: ((request: CachedThreadRequest) -> Void)?
-    var refreshCacheAssertionBlock: ((request: EmailThreadRequest) -> Void)?
-    var getUncachedThreadsAssertionBlock: ((request: UncachedThreadRequest) -> Void)?
+    var getCachedThreadsAssertionBlock: ((_ request: CachedThreadRequest) -> Void)?
+    var refreshCacheAssertionBlock: ((_ request: EmailThreadRequest) -> Void)?
+    var getUncachedThreadsAssertionBlock: ((_ request: UncachedThreadRequest) -> Void)?
     
     required init(cacheDataSource: EmailThreadCacheDataSource, networkDataSource: EmailThreadNetworkDataSource) {}
     
-    func getCachedThreads(request: CachedThreadRequest, completion: [Email] -> Void) {
+    func getCachedThreads(_ request: CachedThreadRequest, completion: ([Email]) -> Void) {
         getCachedThreadsAssertionBlock?(request: request)
         completion(cachedThreads)
     }
     
-    func refreshCache(request: EmailThreadRequest, completion: [Email] -> Void) {
+    func refreshCache(_ request: EmailThreadRequest, completion: ([Email]) -> Void) {
         refreshCacheAssertionBlock?(request: request)
         completion(uncachedThreads)
     }
     
-    func getUncachedThreads(request: UncachedThreadRequest, completion: [Email] -> Void) {
+    func getUncachedThreads(_ request: UncachedThreadRequest, completion: ([Email]) -> Void) {
         getUncachedThreadsAssertionBlock?(request: request)
         completion(uncachedThreads)
     }
@@ -88,13 +88,13 @@ class EmailThreadServiceMock: EmailThreadService {
 class MockCacheDataSource: EmailThreadCacheDataSource {
     var emails: [Email] = []
     
-    var cacheEmailAssertionBlock: ((emails: [NetworkEmail]) -> Void)?
+    var cacheEmailAssertionBlock: ((_ emails: [NetworkEmail]) -> Void)?
     
-    func getThreads(request: CachedThreadRequest, completion: [Email] -> Void) {
+    func getThreads(_ request: CachedThreadRequest, completion: ([Email]) -> Void) {
         completion(emails)
     }
     
-    func cacheEmails(emails: [NetworkEmail]) throws {
+    func cacheEmails(_ emails: [NetworkEmail]) throws {
         cacheEmailAssertionBlock?(emails: emails)
     }
 }
@@ -102,7 +102,7 @@ class MockCacheDataSource: EmailThreadCacheDataSource {
 class MockNetworkDataSource: EmailThreadNetworkDataSource {
     var emails: [NetworkEmail] = []
     
-    func getThreads(request: UncachedThreadRequest, completion: [NetworkEmail] -> Void) {
+    func getThreads(_ request: UncachedThreadRequest, completion: ([NetworkEmail]) -> Void) {
         completion(emails)
     }
 }
@@ -112,7 +112,7 @@ class MockApplication: Application {
     
     var networkActivityIndicatorVisible: Bool = false {
         didSet {
-            networkActivityIndicatorToggleCount++
+            networkActivityIndicatorToggleCount += 1
         }
     }
 }

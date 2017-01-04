@@ -22,14 +22,14 @@ class ThreeDotsButton: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func intrinsicContentSize() -> CGSize {
+    override var intrinsicContentSize : CGSize {
         let height = expandIndicator.frame.size.height
         let width = expandIndicator.frame.size.width
         return CGSize(width: width, height: height)
     }
 }
 
-private func threeDotsToggleIndicator(lightBackground: Bool) -> UIView {
+private func threeDotsToggleIndicator(_ lightBackground: Bool) -> UIView {
     let parent = UIView(frame: CGRect(x: 0, y: 0, width: 70, height: 40)) // Gives the nutri grain piece some padding
     let view = UIView(frame: CGRect(x: 5, y: 7, width: 60, height: 26))
     
@@ -37,11 +37,11 @@ private func threeDotsToggleIndicator(lightBackground: Bool) -> UIView {
     let foreground: UIColor
     
     if lightBackground {
-        background = UIColor.groupTableViewBackgroundColor()
-        foreground = UIColor.lightGrayColor()
+        background = UIColor.groupTableViewBackground
+        foreground = UIColor.lightGray
     } else {
-        background = UIColor.lightGrayColor()
-        foreground = UIColor.groupTableViewBackgroundColor()
+        background = UIColor.lightGray
+        foreground = UIColor.groupTableViewBackground
     }
     
     parent.addSubview(view)
@@ -53,8 +53,8 @@ private func threeDotsToggleIndicator(lightBackground: Bool) -> UIView {
     let label = UILabel(frame: CGRect(x: 0, y: 0, width: 60, height: 22))
     label.text = "•••"
     label.textColor = foreground
-    label.font = UIFont.systemFontOfSize(32)
-    label.textAlignment = .Center
+    label.font = UIFont.systemFont(ofSize: 32)
+    label.textAlignment = .center
     
     view.addSubview(label)
     

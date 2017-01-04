@@ -12,9 +12,9 @@ protocol ThreadsViewControllerDataSource: class, UITableViewDataSource {
     var mailingList: MailingListType { get }
     var title: String { get }
     var isEmpty: Bool { get }
-    func refreshDataFromNetwork(completion: (Bool) -> Void)
-    func emailAtIndexPath(indexPath: NSIndexPath) -> Email
-    func registerTableView(tableView: UITableView)
+    func refreshDataFromNetwork(_ completion: @escaping (Bool) -> Void)
+    func emailAtIndexPath(_ indexPath: IndexPath) -> Email
+    func registerTableView(_ tableView: UITableView)
 }
 
 extension ThreadsViewControllerDataSource {
@@ -24,15 +24,15 @@ extension ThreadsViewControllerDataSource {
 }
 
 class ThreadsViewControllerDataSourceImpl: NSObject, ThreadsViewControllerDataSource {
-    private let service: EmailThreadService
-    private let labelService: LabelService
-    private let cellReuseIdentifier = "threadsCellReuseIdentifier"
-    private let emptyCellReuseIdentifier = "emptyCellReuseIdentifier"
+    fileprivate let service: EmailThreadService
+    fileprivate let labelService: LabelService
+    fileprivate let cellReuseIdentifier = "threadsCellReuseIdentifier"
+    fileprivate let emptyCellReuseIdentifier = "emptyCellReuseIdentifier"
     
     let mailingList: MailingListType
-    private var threads: [Email] = []
+    fileprivate var threads: [Email] = []
     
-    private lazy var emailFormatter: EmailFormatter = EmailFormatter()
+    fileprivate lazy var emailFormatter: EmailFormatter = EmailFormatter()
     
     init(service: EmailThreadService, mailingList: MailingListType, labelService: LabelService) {
         self.service = service
@@ -46,9 +46,9 @@ class ThreadsViewControllerDataSourceImpl: NSObject, ThreadsViewControllerDataSo
         return threads.count == 0
     }
     
-    func registerTableView(tableView: UITableView) {
-        tableView.registerNib(MessagePreviewTableViewCell.nib(), forCellReuseIdentifier: cellReuseIdentifier)
-        tableView.registerNib(NoThreadsTableViewCell.nib(), forCellReuseIdentifier: emptyCellReuseIdentifier)
+    func registerTableView(_ tableView: UITableView) {
+        tableView.register(MessagePreviewTableViewCell.nib(), forCellReuseIdentifier: cellReuseIdentifier)
+        tableView.register(NoThreadsTableViewCell.nib(), forCellReuseIdentifier: emptyCellReuseIdentifier)
         
         service.getCachedThreads(threadsRequestForPage(1)) { [unowned self] (emails) -> Void in
             self.threads = emails
@@ -56,13 +56,13 @@ class ThreadsViewControllerDataSourceImpl: NSObject, ThreadsViewControllerDataSo
         }
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard threads.count > 0 else {
-            tableView.backgroundColor = UIColor.whiteColor()
-            return tableView.dequeueReusableCellWithIdentifier(emptyCellReuseIdentifier)!
+            tableView.backgroundColor = UIColor.white
+            return tableView.dequeueReusableCell(withIdentifier: emptyCellReuseIdentifier)!
         }
         
-        let cell = tableView.dequeueReusableCellWithIdentifier(cellReuseIdentifier) as! MessagePreviewTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellReuseIdentifier) as! MessagePreviewTableViewCell
         let email = threads[indexPath.row]
         let formattedSubject = emailFormatter.formatSubject(email.subject)
         let labels = emailFormatter.labelsInSubject(formattedSubject)
@@ -70,15 +70,15 @@ class ThreadsViewControllerDataSourceImpl: NSObject, ThreadsViewControllerDataSo
         cell.setName(emailFormatter.formatName(email.from))
         cell.setTime(emailFormatter.formatDate(email.date))
         cell.setMessageCount("\(email.descendants.count)")
-        cell.setLabels(labels.map { (labelService.formattedStringForLabel($0), labelService.colorForLabel($0), UIColor.whiteColor()) })
+        cell.setLabels(labels.map { (labelService.formattedStringForLabel($0), labelService.colorForLabel($0), UIColor.white) })
         cell.setSubject(emailFormatter.subjectByRemovingLabels(formattedSubject))
         
         return cell
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard threads.count > 0 else {
-            tableView.backgroundColor = UIColor.whiteColor()
+            tableView.backgroundColor = UIColor.white
             return 1
         }
         
@@ -86,21 +86,21 @@ class ThreadsViewControllerDataSourceImpl: NSObject, ThreadsViewControllerDataSo
         return threads.count
     }
     
-    func refreshDataFromNetwork(completion: (Bool) -> Void) {
+    func refreshDataFromNetwork(_ completion: @escaping (Bool) -> Void) {
         service.refreshCache(threadsRequestForPage(1)) { emails in
             self.threads = emails
             completion(true)
         }
     }
     
-    func emailAtIndexPath(indexPath: NSIndexPath) -> Email {
+    func emailAtIndexPath(_ indexPath: IndexPath) -> Email {
         return threads[indexPath.row]
     }
     
-    private func threadsRequestForPage(page: Int) -> EmailThreadRequest {
+    fileprivate func threadsRequestForPage(_ page: Int) -> EmailThreadRequest {
         let builder = EmailThreadRequestBuilder()
         builder.mailingList = mailingList.identifier
-        builder.inReplyTo = Either.Right(NSNull())
+        builder.inReplyTo = Either.right(NSNull())
         builder.onlyComplete = true
         builder.pageSize = 50
         builder.page = page

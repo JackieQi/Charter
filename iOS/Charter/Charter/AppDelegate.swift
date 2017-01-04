@@ -16,29 +16,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var coordinator: AppCoordinator!
     let navigationController = UINavigationController()
 
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
         
         let orange = UIColor(red:0.99, green:0.43, blue:0.22, alpha:1)
         UINavigationBar.appearance().tintColor = orange
-        UIBarButtonItem.appearanceWhenContainedInInstancesOfClasses([UISearchBar.self]).tintColor = orange
+        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self]).tintColor = orange
         
         coordinator = AppCoordinator(navigationController: navigationController)
         
         let config = Realm.Configuration(schemaVersion: 1, migrationBlock: { migration, oldSchemaVersion in
             if oldSchemaVersion < 1 {
                 print("Migrating from realm schema 0")
-                migration.deleteData(Email.className())
+                migration.deleteData(forType: Email.className())
             }
         })
         
         Realm.Configuration.defaultConfiguration = config
         
-        print("Realm database at \(Realm.Configuration.defaultConfiguration.path)")
+        print("Realm database at \(Realm.Configuration.defaultConfiguration.fileURL)")
         
-        if NSUserDefaults.standardUserDefaults().boolForKey("FASTLANE_SNAPSHOT") {
+        if UserDefaults.standard.bool(forKey: "FASTLANE_SNAPSHOT") {
             // If we are doing UI testing, load some stub data into the default Realm.
             // We can't do this from the UI test because the Realms will be different.
             // Runtime check that we are in snapshot mode.
@@ -46,14 +46,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let realm = try! Realm()
 
             do {
-                let fileURL = NSBundle.mainBundle().URLForResource("ScreenshotData", withExtension: "json")!
-                let data = NSData(contentsOfURL: fileURL)!
-                let json = try NSJSONSerialization.JSONObjectWithData(data, options: []) as! NSDictionary
+                let fileURL = Bundle.main.url(forResource: "ScreenshotData", withExtension: "json")!
+                let data = try! Data(contentsOf: fileURL)
+                let json = try JSONSerialization.jsonObject(with: data, options: []) as! NSDictionary
                 let emailDicts = ((json["_embedded"]! as! NSDictionary)["rh:doc"] as! Array<NSDictionary>)
                 
                 emailDicts.forEach {
                     let networkEmail = try! NetworkEmail(fromDictionary: $0)
-                    try! Email.createFromNetworkEmail(networkEmail, inRealm: realm)
+                    _ = try! Email.createFromNetworkEmail(networkEmail, inRealm: realm)
                 }
             } catch let e {
                 print(e)

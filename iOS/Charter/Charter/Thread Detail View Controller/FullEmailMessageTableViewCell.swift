@@ -9,8 +9,8 @@
 import UIKit
 
 protocol FullEmailMessageTableViewCellDelegate: class {
-    func didChangeCellHeight(indexPath: NSIndexPath)
-    func presentPopover(view: UIView, sender: UIView)
+    func didChangeCellHeight(_ indexPath: IndexPath)
+    func presentPopover(_ view: UIView, sender: UIView)
 }
 
 class FullEmailMessageTableViewCell: UITableViewCell, EmailTextRegionViewDataSourceDelegate, RegionViewDelegate {
@@ -50,21 +50,21 @@ class FullEmailMessageTableViewCell: UITableViewCell, EmailTextRegionViewDataSou
         leadingMarginConstraint.constant = CGFloat(indentationLevel) * indentationWidth
     }
     
-    func regionView(regionView: RegionView, didFinishReplacingRegionAtIndex: Int) {
-        delegate?.didChangeCellHeight(NSIndexPath(forRow: didFinishReplacingRegionAtIndex, inSection: 0))
+    func regionView(_ regionView: RegionView, didFinishReplacingRegionAtIndex: Int) {
+        delegate?.didChangeCellHeight(IndexPath(row: didFinishReplacingRegionAtIndex, section: 0))
     }
     
-    func emailTextRegionViewDatatSourceNeedsPopoverViewControllerPresented(view: UIView, sender: UIView) {
+    func emailTextRegionViewDatatSourceNeedsPopoverViewControllerPresented(_ view: UIView, sender: UIView) {
         delegate?.presentPopover(view, sender: sender)
     }
     
-    func setName(name: String) {
+    func setName(_ name: String) {
         nameLabel.font = UIFont.smallCapsFontOfSize(14)
-        nameLabel.text = name.lowercaseString
+        nameLabel.text = name.lowercased()
     }
     
-    func setDate(date: String) {
+    func setDate(_ date: String) {
         dateLabel.font = UIFont.smallCapsFontOfSize(14)
-        dateLabel.text = date.lowercaseString
+        dateLabel.text = date.lowercased()
     }
 }

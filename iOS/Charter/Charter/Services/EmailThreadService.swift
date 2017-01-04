@@ -7,13 +7,26 @@
 //
 
 import UIKit
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
 
 protocol EmailThreadService {
     init(cacheDataSource: EmailThreadCacheDataSource, networkDataSource: EmailThreadNetworkDataSource)
-    func getCachedThreads(request: CachedThreadRequest, completion: [Email] -> Void)
-    func refreshCache(request: EmailThreadRequest, completion: [Email] -> Void)
+    func getCachedThreads(_ request: CachedThreadRequest, completion: @escaping ([Email]) -> Void)
+    func refreshCache(_ request: EmailThreadRequest, completion: @escaping ([Email]) -> Void)
     /// Prefer `refreshCache` over this method.
-    func getUncachedThreads(request: UncachedThreadRequest, completion: [Email] -> Void)
+    func getUncachedThreads(_ request: UncachedThreadRequest, completion: @escaping ([Email]) -> Void)
 }
 
 protocol Application {
@@ -26,24 +39,24 @@ class EmailThreadServiceImpl: EmailThreadService {
     let cacheDataSource: EmailThreadCacheDataSource
     let networkDataSource: EmailThreadNetworkDataSource
     
-    var application: Application = UIApplication.sharedApplication()
+    var application: Application = UIApplication.shared
     
     required init(cacheDataSource: EmailThreadCacheDataSource, networkDataSource: EmailThreadNetworkDataSource) {
         self.cacheDataSource = cacheDataSource
         self.networkDataSource = networkDataSource
     }
     
-    func getCachedThreads(request: CachedThreadRequest, completion: [Email] -> Void) {
+    func getCachedThreads(_ request: CachedThreadRequest, completion: @escaping ([Email]) -> Void) {
         cacheDataSource.getThreads(request) {
             completion($0)
         }
     }
     
-    func refreshCache(request: EmailThreadRequest, completion: [Email] -> Void) {
+    func refreshCache(_ request: EmailThreadRequest, completion: @escaping ([Email]) -> Void) {
         application.networkActivityIndicatorVisible = true
         
         networkDataSource.getThreads(request) { networkThreads in
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 self.application.networkActivityIndicatorVisible = false
                 
                 let _ = try? self.cacheDataSource.cacheEmails(networkThreads)
@@ -55,11 +68,11 @@ class EmailThreadServiceImpl: EmailThreadService {
         }
     }
     
-    func getUncachedThreads(request: UncachedThreadRequest, completion: [Email] -> Void) {
+    func getUncachedThreads(_ request: UncachedThreadRequest, completion: @escaping ([Email]) -> Void) {
         application.networkActivityIndicatorVisible = true
         
         networkDataSource.getThreads(request) { (networkThreads) -> Void in
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 self.application.networkActivityIndicatorVisible = false
                 
                 let _ = try? self.cacheDataSource.cacheEmails(networkThreads)
@@ -74,7 +87,7 @@ class EmailThreadServiceImpl: EmailThreadService {
                 builder.idIn = networkThreads.map { $0.id }
                 
                 self.cacheDataSource.getThreads(builder.build()) { (localEmails) in
-                    completion(localEmails.sort { order[$0.id] < order[$1.id] })
+                    completion(localEmails.sorted { order[$0.id] < order[$1.id] })
                 }
             }
         }
